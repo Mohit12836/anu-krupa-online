@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: anukrupa-n8n-live
+    runtime: image
+    image:
+      url: docker.io/n8nio/n8n:latest
+    plan: free
+    region: singapore
+    envVars:
+      - key: N8N_PORT
+        value: 10000
+      - key: N8N_HOST
+        value: 0.0.0.0
+      - key: N8N_PROTOCOL
+        value: https
+      - key: GENERIC_TIMEZONE
+        value: Asia/Kolkata
+      - key: TZ
+        value: Asia/Kolkata
