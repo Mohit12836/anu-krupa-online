@@ -1,0 +1,148 @@
+// Banners and Highlight Promos Data
+export const HERO_SLIDES = [
+  {
+    id: "kisan-hero",
+    tagHi: "भरोसेमंद साथी",
+    titleHi: "किसान सेवाओं के लिए आपका भरोसेमंद साथी",
+    subtitleHi: "KCC | PM Kisan | फसल बीमा | खसरा-खतौनी सब कुछ एक ही जगह",
+    featuresHi: [
+      "ऑनलाइन त्वरित आवेदन",
+      "दस्तावेज़ की पूरी सहायता",
+      "फॉर्म भरने में अनुभवी मदद",
+      "तेज़ और भरोसेमंद सेवा",
+    ],
+    ctaTextHi: "सेवा देखें",
+    actionCategoryId: "kisan-krishi",
+    image: "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=1000&auto=format&fit=crop&q=80",
+    badge: "मुख्य सेवा केंद्र",
+    theme: "from-emerald-900 via-slate-900 to-slate-950",
+  },
+  {
+    id: "rto-hero",
+    tagHi: "RTO एवं वाहन",
+    titleHi: "ड्राइविंग लाइसेंस व वाहन से जुड़े सभी काम",
+    subtitleHi: "लर्निंग व पक्का DL | RC ट्रांसफर | वाहन बीमा | HSRP नंबर प्लेट",
+    featuresHi: [
+      "ऑनलाइन स्लॉट बुकिंग",
+      "लाइसेंस रिन्यूअल सहायता",
+      "तत्काल वाहन बीमा",
+      "पारदर्शी सरकारी शुल्क",
+    ],
+    ctaTextHi: "लाइसेंस सेवाएं",
+    actionCategoryId: "rto-vahan",
+    image: "https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=1000&auto=format&fit=crop&q=80",
+    badge: "RTO सुविधा",
+    theme: "from-blue-900 via-slate-900 to-slate-950",
+  },
+  {
+    id: "tax-hero",
+    tagHi: "व्यापार व टैक्स",
+    titleHi: "दुकानदार व व्यापारियों के लिए सुगम डिजिटल समाधान",
+    subtitleHi: "नया GST | मासिक रिटर्न | ITR फाइलिंग | उद्यम आधार पंजीयन",
+    featuresHi: [
+      "समय पर रिटर्न फाइलिंग",
+      "पैन कार्ड तत्काल सुधार",
+      "उद्यम प्रमाण पत्र जारी",
+      "निल रिटर्न आसान समाधान",
+    ],
+    ctaTextHi: "व्यापार सेवाएं",
+    actionCategoryId: "business-tax",
+    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1000&auto=format&fit=crop&q=80",
+    badge: "टैक्स एवं GST",
+    theme: "from-amber-950 via-slate-900 to-slate-950",
+  },
+];
+
+export const SIDE_BANNERS = [
+  {
+    id: "rto-side",
+    titleHi: "RTO & वाहन सेवाएं",
+    descHi: "DL, RC, Insurance, HSRP सबकी सुविधा यहाँ",
+    ctaHi: "अब देखें",
+    categoryId: "rto-vahan",
+    bgGradient: "from-orange-500/10 via-amber-500/5 to-white",
+    borderColor: "border-orange-200",
+    image: "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=500&auto=format&fit=crop&q=80",
+  },
+  {
+    id: "business-side",
+    titleHi: "PAN, GST, ITR & Business Registration",
+    descHi: "व्यापार से जुड़े सभी काम आसान",
+    ctaHi: "अभी जानें",
+    categoryId: "business-tax",
+    bgGradient: "from-blue-500/10 via-indigo-500/5 to-white",
+    borderColor: "border-blue-200",
+    image: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=500&auto=format&fit=crop&q=80",
+  },
+];
+
+export const PROMO_CARDS = [
+  {
+    id: "loan-promo",
+    tagHi: "Home Loan | Personal Loan | Business Loan",
+    titleHi: "आपके सपनों को मिले सही दिशा",
+    ctaHi: "लोन सेवाएं देखें",
+    categoryId: "loan-banking",
+    gradient: "from-blue-50 to-indigo-100",
+    accent: "bg-amber-500 text-slate-900 hover:bg-amber-400",
+    image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=500&auto=format&fit=crop&q=80",
+  },
+  {
+    id: "solar-promo",
+    tagHi: "कृषि उपकरणों पर सरकारी सब्सिडी",
+    titleHi: "Solar Pump & Krishi Yantra Subsidy",
+    ctaHi: "अभी आवेदन करें",
+    categoryId: "kisan-krishi",
+    gradient: "from-amber-50 to-orange-100",
+    accent: "bg-orange-500 text-white hover:bg-orange-600",
+    image: "https://images.unsplash.com/photo-1509391365360-2e959784a276?w=500&auto=format&fit=crop&q=80",
+  },
+  {
+    id: "ayushman-promo",
+    tagHi: "₹5 लाख तक का मुफ्त इलाज",
+    titleHi: "Ayushman Card (PM-JAY)",
+    ctaHi: "जानकारी लें",
+    categoryId: "pension-welfare",
+    gradient: "from-rose-50 to-pink-100",
+    accent: "bg-rose-600 text-white hover:bg-rose-700",
+    image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=500&auto=format&fit=crop&q=80",
+  },
+];
+
+export const TRUST_FEATURES = [
+  {
+    id: "speed",
+    titleHi: "तेज़ और सही सेवा",
+    descHi: "समय पर आपका काम, बिना अनावश्यक देरी",
+    icon: "CheckCircle2",
+    color: "text-emerald-600 bg-emerald-50",
+  },
+  {
+    id: "trust",
+    titleHi: "विश्वसनीय जानकारी",
+    descHi: "सरकारी प्रक्रिया व नियमानुसार सही मार्गदर्शन",
+    icon: "FileCheck",
+    color: "text-blue-600 bg-blue-50",
+  },
+  {
+    id: "team",
+    titleHi: "अनुभवी टीम",
+    descHi: "आपकी सहायता के लिए हमेशा तैयार व समर्पित",
+    icon: "Users",
+    color: "text-orange-600 bg-orange-50",
+  },
+  {
+    id: "all-in-one",
+    titleHi: "एक ही जगह सभी सेवाएं",
+    descHi: "कई काम, एक भरोसा — उकेड़िया का डिजिटल केंद्र",
+    icon: "LayoutGrid",
+    color: "text-indigo-600 bg-indigo-50",
+  },
+  {
+    id: "whatsapp-ease",
+    titleHi: "WhatsApp पर आसान पूछताछ",
+    descHi: "घर बैठे पूरी जानकारी पाएं व स्टेटस ट्रैक करें",
+    icon: "MessageCircle",
+    color: "text-green-600 bg-green-50",
+  },
+];

@@ -1,0 +1,8 @@
+/* Anu Krupa Online - Custom utility helpers */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
