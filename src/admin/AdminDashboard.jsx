@@ -12,7 +12,9 @@ import {
   TrendingUp,
   ShieldCheck,
   Eye,
-  EyeOff
+  EyeOff,
+  Bot,
+  Zap
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 
@@ -152,6 +154,42 @@ export default function AdminDashboard({ onNavigateTab, onOpenAddService }) {
           <span className="text-[11px] text-slate-500 font-medium mt-0.5 block">1 जगह से अपडेट</span>
         </div>
 
+      </div>
+
+      {/* 2.5 AI Multi-Agent Autonomous Workforce Card */}
+      <div 
+        onClick={() => onNavigateTab('agents')}
+        className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white border border-indigo-800/40 shadow-lg cursor-pointer hover:border-orange-500/60 transition-all tap-bounce relative overflow-hidden group"
+      >
+        <div className="absolute top-0 right-0 w-60 h-60 bg-orange-500/10 rounded-full blur-3xl pointer-events-none group-hover:bg-orange-500/20 transition-all" />
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 text-white flex items-center justify-center font-bold shadow-lg shadow-orange-500/30">
+              <Bot className="w-6 h-6 animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black tracking-wider text-orange-400 uppercase">
+                  5 ऑटोनोमस AI कर्मचारी सक्रिय
+                </span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              </div>
+              <h3 className="text-sm sm:text-base font-extrabold text-white mt-0.5">
+                AI दुकान वर्कफोर्स हब (विक्रय राज, दिशा, सहयोगी, संजीवनी, मुनीम जी)
+              </h3>
+              <p className="text-xs text-slate-300">
+                WACRM व WhatsApp पर आने वाली हर लीड को ऑटो-क्लोज और फॉलो-अप करने वाली AI टीम।
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+            <span className="px-3.5 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 transition-all">
+              <span>कंट्रोल हब खोलें</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* 3. Shop Announcement Notice Bar (Instant Live Publishing) */}
