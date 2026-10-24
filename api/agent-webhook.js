@@ -55,7 +55,14 @@ export default async function handler(req, res) {
   // 2. INCOMING MESSAGE & MULTI-AGENT EXECUTION (POST)
   if (req.method === 'POST') {
     try {
-      const body = req.body || {};
+      let body = req.body || {};
+      if (typeof body === 'string') {
+        try {
+          body = JSON.parse(body);
+        } catch {
+          body = {};
+        }
+      }
 
       let senderPhone = '';
       let senderName = 'ग्राहक';
