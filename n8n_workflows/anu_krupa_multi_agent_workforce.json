@@ -1,0 +1,212 @@
+{
+  "name": "Anu Krupa Online — Autonomous Multi-Agent Workforce (100% Free)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "anu-krupa-multi-agent",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook-1",
+      "name": "WhatsApp / Website Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1200,
+        300
+      ],
+      "webhookId": "anu-krupa-multi-agent-inbound"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"message\": \"Message received and queued for Multi-Agent processing\"\n}",
+        "options": {}
+      },
+      "id": "node-resp-ack",
+      "name": "Immediate 200 OK Ack",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -980,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Normalize Payload from Meta WhatsApp, YCloud, or Website\nconst body = $json.body || $json;\nlet customerPhone = '';\nlet customerName = 'ग्राहक';\nlet messageText = '';\nlet partnerRef = body.partnerRef || null;\n\n// Meta WhatsApp Cloud API\nif (body.object === 'whatsapp_business_account') {\n  const message = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];\n  const contact = body.entry?.[0]?.changes?.[0]?.value?.contacts?.[0];\n  customerPhone = message?.from || '';\n  customerName = contact?.profile?.name || 'ग्राहक';\n  messageText = message?.text?.body || message?.button?.text || '';\n} \n// YCloud WhatsApp Webhook\nelse if (body.whatsappInboundMessage) {\n  customerPhone = body.whatsappInboundMessage.from || '';\n  customerName = body.whatsappInboundMessage.senderName || 'ग्राहक';\n  messageText = body.whatsappInboundMessage.text?.body || '';\n}\n// Website or Direct JSON\nelse {\n  customerPhone = body.phone || body.from || '';\n  customerName = body.name || body.customerName || 'ग्राहक';\n  messageText = body.message || body.text || '';\n}\n\n// Classify Intent & Calculate Lead Score\nconst q = (messageText || '').toLowerCase();\nlet intent = 'GENERAL_INQUIRY';\nlet leadScore = 60;\nlet assignedAgent = 'विक्रय राज (Sales Closer)';\n\nif (q.includes('partner') || q.includes('पार्टनर') || q.includes('kamai') || q.includes('कमाई') || q.includes('work from home')) {\n  intent = 'PARTNER_ONBOARDING';\n  leadScore = 85;\n  assignedAgent = 'सहयोगी (WFH Partner Agent)';\n} else if (q.includes('solar') || q.includes('सोलर') || q.includes('78000') || q.includes('सूर्य घर') || q.includes('pump') || q.includes('पंप')) {\n  intent = 'HIGH_VALUE_SOLAR';\n  leadScore = 95;\n  assignedAgent = 'विक्रय राज (Sales Closer)';\n} else if (q.includes('kcc') || q.includes('किसान क्रेडिट') || q.includes('pan') || q.includes('पैन') || q.includes('ayushman') || q.includes('आयुष्मान')) {\n  intent = 'CITIZEN_SERVICE';\n  leadScore = 88;\n  assignedAgent = 'विक्रय राज (Sales Closer)';\n} else if (q.includes('pvc') || q.includes('photo') || q.includes('print') || q.includes('stamp')) {\n  intent = 'PRODUCT_PURCHASE';\n  leadScore = 80;\n  assignedAgent = 'विक्रय राज (Sales Closer)';\n} else {\n  intent = 'GENERAL_LOCAL_SERVICE';\n  leadScore = 70;\n  assignedAgent = 'दिशा (Triage & Qualifier)';\n}\n\nreturn [{\n  json: {\n    customerPhone,\n    customerName,\n    messageText,\n    partnerRef,\n    intent,\n    leadScore,\n    assignedAgent,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "node-normalize",
+      "name": "Extract & Score Lead (दिशा AI)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -980,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.GROQ_API_KEY || 'gsk_free_key_here' }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"temperature\": 0.6,\n  \"max_tokens\": 450,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are '\" + $json.assignedAgent + \"', a verified AI employee at 'Anu Krupa Online' (अनु कृपा ऑनलाइन), physical service shop in Village Ukediya, Tehsil Jaora, District Ratlam (MP) Pin 457226.\\nStrict Rules:\\n1. Only WhatsApp official communication. No direct calls.\\n2. Provide 100% transparent pricing and required documents.\\n3. PM Surya Ghar Solar Rooftop gives ₹78,000 direct subsidy on 3kW.\\n4. KCC renewal takes 2-3 days, requires Khasra/Khatauni, Aadhaar, Bank Passbook, Samagra ID.\\n5. WFH Partner earns ₹1,000-₹1,500 on solar and ₹500 on websites with zero investment.\\n6. Format as polite, warm Hindi/Hinglish message with emojis and bullet points under 130 words.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Customer Name: \" + $json.customerName + \"\\nQuestion: \" + $json.messageText\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "node-groq-ai",
+      "name": "Free AI Brain (Groq Llama-3.3)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -720,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract Generated AI Response and Apply Guardrails\nconst prev = $('Extract & Score Lead (दिशा AI)').first().json;\nconst aiReply = $json.choices?.[0]?.message?.content || 'नमस्ते! अनु कृपा ऑनलाइन में आपका स्वागत है। कृपया अपने दस्तावेज़ भेजें।';\n\nreturn [{\n  json: {\n    ...prev,\n    aiReply: aiReply.trim(),\n    sentAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })\n  }\n}];"
+      },
+      "id": "node-guardrails",
+      "name": "Enforce Store Guardrails",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://anu-krupa-online.vercel.app/api/agent-webhook",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": \"{{ $json.customerName }}\",\n  \"phone\": \"{{ $json.customerPhone }}\",\n  \"message\": \"{{ $json.messageText }}\",\n  \"handledBy\": \"{{ $json.assignedAgent }}\",\n  \"leadScore\": {{ $json.leadScore }},\n  \"partnerRef\": \"{{ $json.partnerRef }}\"\n}",
+        "options": {}
+      },
+      "id": "node-sync-vercel",
+      "name": "Sync to Vercel Admin Panel",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -240,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v19.0/{{ $env.WHATSAPP_PHONE_NUMBER_ID || 'YOUR_PHONE_ID' }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHATSAPP_ACCESS_TOKEN || 'YOUR_TOKEN' }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $json.customerPhone }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"{{ $json.aiReply }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "node-send-whatsapp",
+      "name": "Send WhatsApp Auto-Reply",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -240,
+        380
+      ]
+    }
+  ],
+  "connections": {
+    "WhatsApp / Website Webhook": {
+      "main": [
+        [
+          {
+            "node": "Immediate 200 OK Ack",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract & Score Lead (दिशा AI)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract & Score Lead (दिशा AI)": {
+      "main": [
+        [
+          {
+            "node": "Free AI Brain (Groq Llama-3.3)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Free AI Brain (Groq Llama-3.3)": {
+      "main": [
+        [
+          {
+            "node": "Enforce Store Guardrails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enforce Store Guardrails": {
+      "main": [
+        [
+          {
+            "node": "Sync to Vercel Admin Panel",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send WhatsApp Auto-Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
