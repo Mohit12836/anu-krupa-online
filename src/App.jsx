@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import HeroBanners from './components/HeroBanners';
 import CategoryGrid from './components/CategoryGrid';
@@ -133,16 +133,43 @@ function CustomerView({ onSwitchToAdmin }) {
 }
 
 function MainApp() {
-  const [viewMode, setViewMode] = useState('customer'); // 'customer' | 'admin'
+  const checkIsAdminPath = () => {
+    if (typeof window === 'undefined') return false;
+    const path = window.location.pathname.toLowerCase();
+    return path.includes('aaadmin') || path.includes('/admin');
+  };
+
+  const [viewMode, setViewMode] = useState(() => (checkIsAdminPath() ? 'admin' : 'customer'));
+
+  // Listen to browser navigation (Back / Forward buttons)
+  useEffect(() => {
+    const handlePopState = () => {
+      setViewMode(checkIsAdminPath() ? 'admin' : 'customer');
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const handleSwitchToAdmin = () => {
+    window.history.pushState({}, '', '/aaadmin');
+    setViewMode('admin');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSwitchToCustomer = () => {
+    window.history.pushState({}, '', '/');
+    setViewMode('customer');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   if (viewMode === 'admin') {
     return (
-      <AdminLayout onSwitchToCustomer={() => setViewMode('customer')} />
+      <AdminLayout onSwitchToCustomer={handleSwitchToCustomer} />
     );
   }
 
   return (
-    <CustomerView onSwitchToAdmin={() => setViewMode('admin')} />
+    <CustomerView onSwitchToAdmin={handleSwitchToAdmin} />
   );
 }
 
