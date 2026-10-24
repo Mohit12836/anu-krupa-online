@@ -231,9 +231,18 @@ export function saveStoredAgents(agents) {
   }
 }
 
-// Multi-Provider Keys Configuration
+// Multi-Provider Keys Configuration (with Dify, Flowise, and n8n External Brains)
 export function getStoredProviders() {
   const defaults = {
+    // 🧠 1. Ready-Made External AI Brains (Dify.ai, Flowise, n8n)
+    difyApiKey: '',
+    difyBaseUrl: 'https://api.dify.ai/v1',
+    flowiseEndpoint: '',
+    n8nWebhookUrl: '',
+    useExternalBrain: false, // true to route through Dify/Flowise/n8n
+    primaryBrain: 'dify',    // 'dify' | 'flowise' | 'n8n' | 'direct'
+
+    // ⚡ 2. Direct LLM Providers
     groqApiKey: '',
     geminiApiKey: '',
     openaiApiKey: '',
@@ -411,9 +420,55 @@ export async function executeMultiAgentWorkflow({
   let responseText = '';
   let modelUsed = `${provider.toUpperCase()} (${agent.model || 'auto'})`;
   let isRealLlm = false;
+  let retrieverResources = [];
 
-  // Try real LLM if key is present
-  if (apiKey && apiKey.trim().length > 8 && provider !== 'deterministic') {
+  // 🧠 1. Check for Dify.ai or External Brain First (if configured)
+  const shouldTryDify = (providers.useExternalBrain && providers.primaryBrain === 'dify' && providers.difyApiKey) || 
+                        (provider === 'dify' && providers.difyApiKey) ||
+                        (providers.difyApiKey && providers.difyApiKey.trim().length > 5);
+
+  if (shouldTryDify) {
+    try {
+      const difyRes = await callDifyBrain({
+        apiKey: providers.difyApiKey.trim(),
+        baseUrl: providers.difyBaseUrl,
+        query: customerMessage,
+        customerName,
+        inputs: {
+          service_name: matchedService ? matchedService.name : 'सामान्य पूछताछ',
+          agent_role: agent.role,
+        },
+      });
+      if (difyRes && difyRes.answer) {
+        responseText = difyRes.answer;
+        modelUsed = 'Dify.ai Headless Multi-Agent Brain (RAG + Tools)';
+        retrieverResources = difyRes.retrieverResources || [];
+        isRealLlm = true;
+      }
+    } catch (difyErr) {
+      console.warn('Dify.ai Brain call failed, falling back to local multi-agent router:', difyErr);
+    }
+  }
+
+  // 🧠 2. Check for Flowise AI Brain (if configured)
+  if (!responseText && providers.useExternalBrain && providers.primaryBrain === 'flowise' && providers.flowiseEndpoint) {
+    try {
+      const flowiseRes = await callFlowiseBrain({
+        endpoint: providers.flowiseEndpoint,
+        query: customerMessage,
+      });
+      if (flowiseRes && flowiseRes.answer) {
+        responseText = flowiseRes.answer;
+        modelUsed = 'Flowise AI Multi-Agent Flow';
+        isRealLlm = true;
+      }
+    } catch (flowiseErr) {
+      console.warn('Flowise Brain call failed:', flowiseErr);
+    }
+  }
+
+  // ⚡ 3. Direct LLM Call (Groq, Gemini, OpenAI, LiteLLM) if external brain didn't respond
+  if (!responseText && apiKey && apiKey.trim().length > 8 && provider !== 'deterministic') {
     try {
       const llmResult = await callExternalLLM({
         provider,
@@ -477,6 +532,7 @@ export async function executeMultiAgentWorkflow({
     meta: {
       isRealLlm,
       modelUsed,
+      retrieverResources,
       durationMs,
       timestamp: new Date().toISOString(),
     },
@@ -716,5 +772,106 @@ Output Format: A clean, warm, conversion-focused WhatsApp message in Hindi/Hingl
   return {
     text: data?.choices?.[0]?.message?.content || '',
     model: `OpenAI (${agent.model || 'gpt-4o-mini'})`,
+  };
+}
+
+// 🧠 1. Dify.ai Headless Brain Caller (Native Dify REST API)
+export async function callDifyBrain({
+  apiKey,
+  baseUrl = 'https://api.dify.ai/v1',
+  query,
+  customerName = 'ग्राहक',
+  conversationId = '',
+  inputs = {},
+}) {
+  const cleanBase = (baseUrl || 'https://api.dify.ai/v1').replace(/\/$/, '');
+  const url = `${cleanBase}/chat-messages`;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      inputs: {
+        customer_name: customerName,
+        shop_name: 'अनु कृपा ऑनलाइन',
+        location: 'उकेड़िया, जावरा (रतलाम)',
+        ...inputs,
+      },
+      query,
+      response_mode: 'blocking',
+      conversation_id: conversationId || undefined,
+      user: `anu-krupa-${Date.now()}`,
+    }),
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Dify API Error (${res.status}): ${errorText}`);
+  }
+
+  const data = await res.json();
+  return {
+    answer: data.answer || '',
+    conversationId: data.conversation_id || '',
+    messageId: data.message_id || '',
+    retrieverResources: data.metadata?.retriever_resources || [],
+    raw: data,
+  };
+}
+
+// 🧠 2. Flowise AI Prediction Caller
+export async function callFlowiseBrain({
+  endpoint,
+  query,
+}) {
+  const cleanUrl = endpoint.trim();
+  const res = await fetch(cleanUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      question: query,
+    }),
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Flowise API Error (${res.status}): ${errorText}`);
+  }
+
+  const data = await res.json();
+  return {
+    answer: data.text || data.answer || JSON.stringify(data),
+    raw: data,
+  };
+}
+
+// 🧠 3. n8n AI Agent Webhook Caller
+export async function callN8nBrain({
+  webhookUrl,
+  payload,
+}) {
+  const cleanUrl = webhookUrl.trim();
+  const res = await fetch(cleanUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`n8n Webhook Error (${res.status}): ${errorText}`);
+  }
+
+  const data = await res.json();
+  return {
+    answer: data.output || data.reply || data.text || JSON.stringify(data),
+    raw: data,
   };
 }

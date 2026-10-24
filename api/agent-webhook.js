@@ -98,14 +98,53 @@ export default async function handler(req, res) {
         });
       }
 
-      // Dynamic Classification Logic (Pure Node.js compatible)
+      // 🧠 1. Dify.ai Headless Brain Integration (if configured)
+      const DIFY_KEY = process.env.DIFY_API_KEY || body.difyApiKey;
+      const DIFY_BASE = (process.env.DIFY_BASE_URL || body.difyBaseUrl || 'https://api.dify.ai/v1').replace(/\/$/, '');
+
+      let difyAnswer = null;
+      if (DIFY_KEY && DIFY_KEY.trim().length > 5) {
+        try {
+          const difyRes = await fetch(`${DIFY_BASE}/chat-messages`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${DIFY_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              inputs: {
+                customer_name: senderName,
+                shop_name: 'अनु कृपा ऑनलाइन',
+                location: 'उकेड़िया, जावरा (रतलाम)',
+              },
+              query: messageText,
+              response_mode: 'blocking',
+              user: senderPhone || `guest-${Date.now()}`,
+            }),
+          });
+          if (difyRes.ok) {
+            const difyData = await difyRes.json();
+            if (difyData.answer) {
+              difyAnswer = difyData.answer;
+            }
+          }
+        } catch (difyErr) {
+          console.warn('Dify call failed, falling back to local multi-agent rules:', difyErr.message);
+        }
+      }
+
+      // Dynamic Classification Logic
       const q = messageText.toLowerCase();
       let assignedAgent = 'विक्रय राज (Sales Closer)';
       let intent = 'GENERAL_INQUIRY';
       let leadScore = 60;
-      let replyText = '';
+      let replyText = difyAnswer || '';
 
-      if (q.includes('partner') || q.includes('पार्टनर') || q.includes('kamai') || q.includes('कमाई') || q.includes('work from home')) {
+      if (difyAnswer) {
+        assignedAgent = 'Dify.ai Multi-Agent Brain (RAG + Tools)';
+        intent = 'DIFY_HANDLED';
+        leadScore = 90;
+      } else if (q.includes('partner') || q.includes('पार्टनर') || q.includes('kamai') || q.includes('कमाई') || q.includes('work from home')) {
         assignedAgent = 'सहयोगी (WFH Partner Agent)';
         intent = 'PARTNER_ONBOARDING';
         leadScore = 85;

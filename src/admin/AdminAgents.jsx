@@ -1017,6 +1017,24 @@ export default function AdminAgents() {
                       </span>
                     </div>
                   </div>
+
+                  {/* 📚 Dify RAG Retriever References */}
+                  {simResult.meta?.retrieverResources && simResult.meta.retrieverResources.length > 0 && (
+                    <div className="bg-indigo-950/80 border border-indigo-500/40 p-2.5 rounded-xl text-[11px] text-indigo-200 space-y-1">
+                      <div className="font-bold text-indigo-300 flex items-center gap-1.5">
+                        <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
+                        <span>Dify RAG द्वारा उपयोग किए गए दस्तावेज़ (Knowledge References):</span>
+                      </div>
+                      <ul className="list-disc list-inside space-y-0.5 text-[10px] text-indigo-300/90 font-mono">
+                        {simResult.meta.retrieverResources.map((res, i) => (
+                          <li key={i} className="truncate">
+                            {res.document_name || `संदर्भ दस्तावेज़ #${i + 1}`} (प्रासंगिकता: {Math.round((res.score || 0.85) * 100)}%)
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
                 </div>
 
                 {/* WhatsApp Chat Preview */}
@@ -1112,6 +1130,73 @@ export default function AdminAgents() {
 
           <form onSubmit={handleSaveProviders} className="space-y-3 pt-2">
             
+            {/* 🧠 DIFY.AI HEADLESS BRAIN (World's #1 Open-Source Multi-Agent Platform) */}
+            <div className="p-4 rounded-2xl border-2 border-indigo-500/50 bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-950 text-white space-y-3 shadow-xl relative overflow-hidden">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-500/30 border border-indigo-400/50 flex items-center justify-center font-black text-indigo-300 text-lg shadow-inner">
+                    D
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-extrabold text-sm sm:text-base text-white">
+                        Dify.ai हेडलेस AI ब्रेन (Headless Multi-Agent Brain)
+                      </span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold">
+                        160K Stars • रेडीमेड
+                      </span>
+                    </div>
+                    <span className="text-xs text-indigo-200">
+                      Dify क्लाउड (cloud.dify.ai) का पूरा मल्टी-एजेंट दिमाग, PDF डाक्यूमेंट्स और RAG सीधे कनेक्ट करें।
+                    </span>
+                  </div>
+                </div>
+
+                <label className="flex items-center gap-2 text-xs font-bold text-indigo-300 cursor-pointer shrink-0 bg-indigo-900/60 px-3 py-1.5 rounded-xl border border-indigo-400/30">
+                  <input
+                    type="checkbox"
+                    checked={providers.useExternalBrain || false}
+                    onChange={(e) => setProviders({ ...providers, useExternalBrain: e.target.checked })}
+                    className="rounded text-indigo-500"
+                  />
+                  <span>सक्रिय (ON)</span>
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div>
+                  <label className="text-xs font-bold text-indigo-200 block mb-1">
+                    Dify App API Key (app-...)
+                  </label>
+                  <input
+                    type="password"
+                    value={providers.difyApiKey || ''}
+                    onChange={(e) => setProviders({ ...providers, difyApiKey: e.target.value })}
+                    placeholder="app-xxxxxxxxxxxxxxxxxxxxxxxx"
+                    className="w-full p-2.5 text-xs rounded-xl border border-indigo-400/40 bg-indigo-950/70 font-mono text-white placeholder-indigo-400/50"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-indigo-200 block mb-1">
+                    Dify API Base URL
+                  </label>
+                  <input
+                    type="text"
+                    value={providers.difyBaseUrl || 'https://api.dify.ai/v1'}
+                    onChange={(e) => setProviders({ ...providers, difyBaseUrl: e.target.value })}
+                    placeholder="https://api.dify.ai/v1"
+                    className="w-full p-2.5 text-xs rounded-xl border border-indigo-400/40 bg-indigo-950/70 font-mono text-white placeholder-indigo-400/50"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-indigo-300 pt-2 border-t border-indigo-900/60 gap-1">
+                <span>💡 मुफ़्त Dify अकाउंट बनाएं: <a href="https://cloud.dify.ai" target="_blank" rel="noreferrer" className="text-orange-400 font-bold underline">cloud.dify.ai</a> (2 मिनट में रेडी)</span>
+                <span className="text-emerald-400 font-semibold">एजेंट्स + PDF RAG तुरंत काम करेगा</span>
+              </div>
+            </div>
+
             {/* Groq Card */}
             <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2">
               <div className="flex items-center justify-between">
