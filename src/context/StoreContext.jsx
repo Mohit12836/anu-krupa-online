@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { SERVICES } from '../data/servicesData';
-import { CATEGORIES } from '../data/categoriesData';
+import { CATEGORIES, MACRO_VERTICALS } from '../data/categoriesData';
 import { BUSINESS_CONFIG } from '../data/businessConfig';
 import { HERO_SLIDES, SIDE_BANNERS, PROMO_CARDS } from '../data/bannersData';
 import { dbAdapter } from '../services/dbAdapter';
@@ -8,10 +8,13 @@ import { dbAdapter } from '../services/dbAdapter';
 const StoreContext = createContext(null);
 
 const STORAGE_KEYS = {
-  SERVICES: 'ak_online_services_v1',
+  SERVICES: 'ak_online_services_v2', // v2 with merged rich catalog
   SETTINGS: 'ak_online_settings_v1',
-  INQUIRIES: 'ak_online_inquiries_v1',
+  INQUIRIES: 'ak_online_inquiries_v2',
   BANNERS: 'ak_online_banners_v1',
+  PARTNERS: 'ak_online_partners_v1',
+  CURRENT_PARTNER: 'ak_online_current_partner_v1',
+  ACTIVE_REF: 'ak_online_active_ref_v1',
 };
 
 // Initial realistic customer inquiries for demonstration
@@ -24,18 +27,22 @@ const INITIAL_INQUIRIES = [
     serviceName: 'Kisan Credit Card (KCC)',
     selectedOption: 'KCC नवीनीकरण (Renewal)',
     note: 'पुराने KCC की 3 लाख की लिमिट बढ़वानी है।',
-    status: 'IN_PROGRESS', // NEW, IN_PROGRESS, COMPLETED, CLOSED
+    status: 'IN_PROGRESS',
+    partnerId: 'AKP-7821',
+    partnerName: 'दिलीप पाटीदार',
     createdAt: 'आज, 11:30 AM',
   },
   {
     id: 'inq-102',
     customerName: 'सुनील धाकड़ (जावरा)',
     phone: '94258XXXXX',
-    serviceId: 'driving-licence',
-    serviceName: 'Driving Licence (DL)',
-    selectedOption: 'स्थायी लाइसेंस (Permanent DL)',
-    note: 'लर्निंग लाइसेंस 1 महीना पहले बना था।',
+    serviceId: 'pm-surya-ghar-solar',
+    serviceName: 'PM सूर्य घर मुफ्त बिजली योजना',
+    selectedOption: '3 kW ग्रिड कनेक्टेड रूफटॉप',
+    note: 'घर की छत पर ₹78,000 सब्सिडी वाला लगवाना है।',
     status: 'NEW',
+    partnerId: 'AKP-9042',
+    partnerName: 'राकेश धाकड़',
     createdAt: 'आज, 01:15 PM',
   },
   {
@@ -47,16 +54,75 @@ const INITIAL_INQUIRIES = [
     selectedOption: 'परिवार के नए सदस्य का नाम जोड़ना',
     note: 'बच्चे का नाम समग्र आईडी में जुड़ गया है।',
     status: 'COMPLETED',
+    partnerId: null,
+    partnerName: null,
     createdAt: 'कल, 04:45 PM',
   },
 ];
 
+// Initial realistic Work-From-Home partners
+const INITIAL_PARTNERS = [
+  {
+    id: 'AKP-7821',
+    name: 'दिलीप पाटीदार',
+    phone: '9826123456',
+    village: 'उकेड़िया (जावरा)',
+    upiId: 'dilip.patidar@oksbi',
+    leadsCount: 6,
+    commissionEarned: 750,
+    commissionPaid: 500,
+    status: 'ACTIVE',
+    joinedAt: '2026-10-18',
+  },
+  {
+    id: 'AKP-9042',
+    name: 'राकेश धाकड़',
+    phone: '9425876543',
+    village: 'जावरा शहर',
+    upiId: 'rakesh9425@paytm',
+    leadsCount: 4,
+    commissionEarned: 2200,
+    commissionPaid: 1000,
+    status: 'ACTIVE',
+    joinedAt: '2026-10-21',
+  },
+  {
+    id: 'AKP-3419',
+    name: 'कमलेश चौधरी',
+    phone: '9123456789',
+    village: 'पिपलोदा (रतलाम)',
+    upiId: 'kamlesh@ibl',
+    leadsCount: 2,
+    commissionEarned: 200,
+    commissionPaid: 0,
+    status: 'ACTIVE',
+    joinedAt: '2026-10-23',
+  },
+];
+
 export function StoreProvider({ children }) {
-  // 1. Services State
+  // 1. Services State with safe merge so new catalog items appear while preserved hidden status stays intact
   const [services, setServices] = useState(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEYS.SERVICES);
-      return saved ? JSON.parse(saved) : SERVICES;
+      const saved = localStorage.getItem(STORAGE_KEYS.SERVICES) || localStorage.getItem('ak_online_services_v1');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const savedMap = new Map(parsed.map(s => [s.id, s]));
+        return SERVICES.map(item => {
+          const existing = savedMap.get(item.id);
+          if (existing) {
+            const isHidden = existing.isHidden ?? (existing.availability === 'hidden' || existing.availability === 'paused');
+            return {
+              ...item,
+              isHidden: isHidden,
+              availability: isHidden ? 'hidden' : 'available',
+              isPopular: existing.isPopular ?? item.isPopular,
+            };
+          }
+          return item;
+        });
+      }
+      return SERVICES;
     } catch {
       return SERVICES;
     }
@@ -83,7 +149,7 @@ export function StoreProvider({ children }) {
   // 3. Inquiries Pipeline State
   const [inquiries, setInquiries] = useState(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEYS.INQUIRIES);
+      const saved = localStorage.getItem(STORAGE_KEYS.INQUIRIES) || localStorage.getItem('ak_online_inquiries_v1');
       return saved ? JSON.parse(saved) : INITIAL_INQUIRIES;
     } catch {
       return INITIAL_INQUIRIES;
@@ -100,7 +166,58 @@ export function StoreProvider({ children }) {
     }
   });
 
-  // Save to localStorage whenever state changes
+  // 5. Work-From-Home Partners State
+  const [partners, setPartners] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.PARTNERS);
+      return saved ? JSON.parse(saved) : INITIAL_PARTNERS;
+    } catch {
+      return INITIAL_PARTNERS;
+    }
+  });
+
+  // 6. Current User's Registered Partner Profile (if they registered on this device)
+  const [currentPartner, setCurrentPartner] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.CURRENT_PARTNER);
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  // 7. Active Referral Code detected from URL ?ref=AKP-XXXX
+  const [activeRef, setActiveRef] = useState(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const refParam = urlParams.get('ref');
+        if (refParam) {
+          const cleaned = refParam.trim().toUpperCase();
+          localStorage.setItem(STORAGE_KEYS.ACTIVE_REF, cleaned);
+          return cleaned;
+        }
+      }
+      return localStorage.getItem(STORAGE_KEYS.ACTIVE_REF) || null;
+    } catch {
+      return null;
+    }
+  });
+
+  // Listen to URL search param on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const refParam = urlParams.get('ref');
+      if (refParam) {
+        const cleaned = refParam.trim().toUpperCase();
+        setActiveRef(cleaned);
+        localStorage.setItem(STORAGE_KEYS.ACTIVE_REF, cleaned);
+      }
+    }
+  }, []);
+
+  // Save states to localStorage
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEYS.SERVICES, JSON.stringify(services));
@@ -124,6 +241,24 @@ export function StoreProvider({ children }) {
       console.warn('LocalStorage save error:', e);
     }
   }, [inquiries]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.PARTNERS, JSON.stringify(partners));
+    } catch (e) {
+      console.warn('LocalStorage save error:', e);
+    }
+  }, [partners]);
+
+  useEffect(() => {
+    try {
+      if (currentPartner) {
+        localStorage.setItem(STORAGE_KEYS.CURRENT_PARTNER, JSON.stringify(currentPartner));
+      }
+    } catch (e) {
+      console.warn('LocalStorage save error:', e);
+    }
+  }, [currentPartner]);
 
   // Actions for Owner
 
@@ -178,6 +313,7 @@ export function StoreProvider({ children }) {
       ...newService,
       id: newService.id || `srv-${Date.now()}`,
       availability: 'available',
+      isHidden: false,
       isPopular: newService.isPopular ?? false,
       isFeatured: newService.isFeatured ?? false,
       displayOrder: services.length + 1,
@@ -204,12 +340,14 @@ export function StoreProvider({ children }) {
     setInquiries((prev) =>
       prev.map((inq) => (inq.id === inquiryId ? { ...inq, status: newStatus } : inq))
     );
-    // Background async sync to Supabase / Google Sheet
     dbAdapter.syncInquiryStatus(inquiryId, newStatus);
   };
 
-  // Record a new inquiry when customer clicks WhatsApp
-  const recordInquiry = ({ serviceName, selectedOption, customerNote }) => {
+  // Record a new inquiry when customer clicks WhatsApp (attaches active referral partner if present)
+  const recordInquiry = ({ serviceName, selectedOption, customerNote, partnerRef: explicitRef }) => {
+    const refCode = explicitRef || activeRef || null;
+    const matchedPartner = refCode ? partners.find(p => p.id === refCode) : null;
+
     const newInq = {
       id: `inq-${Date.now()}`,
       customerName: 'वेबसाइट आगंतुक (Website Visitor)',
@@ -219,11 +357,75 @@ export function StoreProvider({ children }) {
       selectedOption: selectedOption || 'जानकारी',
       note: customerNote || '',
       status: 'NEW',
+      partnerId: refCode,
+      partnerName: matchedPartner ? matchedPartner.name : (refCode ? `पार्टनर ${refCode}` : null),
       createdAt: 'अभी (Just now)',
     };
+
     setInquiries((prev) => [newInq, ...prev]);
-    // Background async sync to Supabase / Google Sheet
     dbAdapter.syncInquiry(newInq);
+
+    // If referred by a partner, increment partner lead count & estimated commission
+    if (refCode) {
+      setPartners((prev) =>
+        prev.map((p) => {
+          if (p.id === refCode) {
+            return {
+              ...p,
+              leadsCount: (p.leadsCount || 0) + 1,
+              commissionEarned: (p.commissionEarned || 0) + 50, // default ₹50 commission per lead
+            };
+          }
+          return p;
+        })
+      );
+    }
+  };
+
+  // Work-From-Home Partner Registration
+  const registerPartner = ({ name, phone, village, upiId }) => {
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const partnerId = `AKP-${randomSuffix}`;
+
+    const newPartner = {
+      id: partnerId,
+      name: name.trim(),
+      phone: phone.trim(),
+      village: village.trim() || 'मध्य प्रदेश',
+      upiId: upiId.trim(),
+      leadsCount: 0,
+      commissionEarned: 0,
+      commissionPaid: 0,
+      status: 'ACTIVE',
+      joinedAt: new Date().toISOString().split('T')[0],
+    };
+
+    setPartners((prev) => [newPartner, ...prev]);
+    setCurrentPartner(newPartner);
+    return newPartner;
+  };
+
+  // Mark commission paid by Admin
+  const markCommissionPaid = (partnerId, amountPaid = null) => {
+    setPartners((prev) =>
+      prev.map((p) => {
+        if (p.id === partnerId) {
+          const totalEarned = p.commissionEarned || 0;
+          return {
+            ...p,
+            commissionPaid: amountPaid ? (p.commissionPaid || 0) + Number(amountPaid) : totalEarned,
+          };
+        }
+        return p;
+      })
+    );
+  };
+
+  // Update partner status (ACTIVE / PAUSED)
+  const updatePartnerStatus = (partnerId, newStatus) => {
+    setPartners((prev) =>
+      prev.map((p) => (p.id === partnerId ? { ...p, status: newStatus } : p))
+    );
   };
 
   // Bulk sync all current services to Google Sheet
@@ -240,9 +442,11 @@ export function StoreProvider({ children }) {
       announcementBanner: '🌾 किसान भाइयों के लिए समर्थन मूल्य ई-उपार्जन पंजीयन शुरू हो गया है।',
     });
     setInquiries(INITIAL_INQUIRIES);
+    setPartners(INITIAL_PARTNERS);
     localStorage.removeItem(STORAGE_KEYS.SERVICES);
     localStorage.removeItem(STORAGE_KEYS.SETTINGS);
     localStorage.removeItem(STORAGE_KEYS.INQUIRIES);
+    localStorage.removeItem(STORAGE_KEYS.PARTNERS);
   };
 
   return (
@@ -250,9 +454,13 @@ export function StoreProvider({ children }) {
       value={{
         services,
         categories: CATEGORIES,
+        macroVerticals: MACRO_VERTICALS,
         settings,
         inquiries,
         heroSlides,
+        partners,
+        currentPartner,
+        activeRef,
         dbConfig,
         updateDbConfig,
         dbAdapter,
@@ -266,6 +474,9 @@ export function StoreProvider({ children }) {
         updateSettings,
         updateInquiryStatus,
         recordInquiry,
+        registerPartner,
+        markCommissionPaid,
+        updatePartnerStatus,
         resetToFactoryDefault,
       }}
     >

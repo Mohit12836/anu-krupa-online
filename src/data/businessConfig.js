@@ -10,7 +10,7 @@ export const BUSINESS_CONFIG = {
   workingDaysHi: "सोमवार से रविवार (सातों दिन)",
   whatsappNumber: "916263879076",
   whatsappDisplay: "6263879076",
-  whatsappChannelUrl: "https://whatsapp.com/channel/placeholder-anukrupa", // Optional follow channel
+  whatsappChannelUrl: "https://whatsapp.com/channel/placeholder-anukrupa",
   servicesCount: "50+",
   establishedYear: "2021",
   callingPolicyNoteHi: "नोट: वेबसाइट पर डायरेक्ट कॉलिंग उपलब्ध नहीं है। सभी पूछताछ व सेवा सहायता सीधे आधिकारिक WhatsApp पर तुरंत उपलब्ध है।",
@@ -18,26 +18,32 @@ export const BUSINESS_CONFIG = {
 
 /**
  * Generates an official WhatsApp Click-to-Chat URL with encoded pre-filled text.
- * Strictly adheres to WhatsApp URL encoding without any unauthorized bots.
+ * Includes support for Partner Referral tracking and Item Type (Service / Product).
  */
-export function createWhatsAppInquiryLink({ serviceName, selectedOption, customNote, whatsappNumber }) {
+export function createWhatsAppInquiryLink({ serviceName, selectedOption, customNote, whatsappNumber, partnerRef, itemType }) {
   let text = `नमस्ते Anu Krupa Online,\n\n`;
 
+  const typeLabel = itemType === 'product' ? 'उत्पाद' : 'सेवा';
+
   if (serviceName) {
-    text += `मुझे *${serviceName}* सेवा के बारे में जानकारी और सहायता चाहिए।\n`;
+    text += `मुझे *${serviceName}* (${typeLabel}) के बारे में जानकारी और ऑर्डर करना है।\n`;
   } else {
-    text += `मुझे आपकी सेवाओं के संबंध में जानकारी चाहिए।\n`;
+    text += `मुझे आपकी सेवाओं व उत्पादों के संबंध में जानकारी चाहिए।\n`;
   }
 
   if (selectedOption) {
     text += `• चुना गया विकल्प: *${selectedOption}*\n`;
   }
 
-  if (customNote && customNote.trim() !== '') {
-    text += `• ग्राहक टिप्पणी: ${customNote.trim()}\n`;
+  if (partnerRef) {
+    text += `• 🤝 रेफरल पार्टनर ID: *${partnerRef}* (कमीशन कोड)\n`;
   }
 
-  text += `\nकृपया आवश्यक दस्तावेज़, प्रक्रिया और फीस की जानकारी प्रदान करें।\nधन्यवाद!`;
+  if (customNote && customNote.trim() !== '') {
+    text += `• ग्राहक विवरण/टिप्पणी: ${customNote.trim()}\n`;
+  }
+
+  text += `\nकृपया आवश्यक दस्तावेज़, समय और फीस/रेट की जानकारी प्रदान करें।\nधन्यवाद!`;
 
   const phone = whatsappNumber || BUSINESS_CONFIG.whatsappNumber;
   const encodedMessage = encodeURIComponent(text);

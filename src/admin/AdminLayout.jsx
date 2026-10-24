@@ -19,9 +19,11 @@ import AdminServices from './AdminServices';
 import AdminEnquiries from './AdminEnquiries';
 import AdminWebsite from './AdminWebsite';
 import AdminSettings from './AdminSettings';
+import AdminPartners from './AdminPartners';
+import { Users as UsersIcon } from 'lucide-react';
 
 export default function AdminLayout({ onSwitchToCustomer }) {
-  const { settings, inquiries, services, addService } = useStore();
+  const { settings, inquiries, services, partners, addService } = useStore();
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'services' | 'enquiries' | 'website' | 'settings'
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
@@ -66,7 +68,8 @@ export default function AdminLayout({ onSwitchToCustomer }) {
 
   const TABS = [
     { id: 'dashboard', label: 'डैशबोर्ड', icon: LayoutDashboard },
-    { id: 'services', label: 'सेवाएँ', icon: Layers, count: services.length },
+    { id: 'services', label: 'सेवाएँ व उत्पाद', icon: Layers, count: services.length },
+    { id: 'partners', label: 'पार्टनर व रेफरल', icon: UsersIcon, count: partners.length },
     { id: 'enquiries', label: 'पूछताछ', icon: MessageCircle, count: pendingInquiriesCount, highlight: pendingInquiriesCount > 0 },
     { id: 'website', label: 'दुकान व बैनर', icon: ImageIcon },
     { id: 'settings', label: 'सेटिंग्स', icon: Settings },
@@ -156,6 +159,9 @@ export default function AdminLayout({ onSwitchToCustomer }) {
           <AdminServices 
             onOpenAddModal={() => setIsAddModalOpen(true)}
           />
+        )}
+        {activeTab === 'partners' && (
+          <AdminPartners />
         )}
         {activeTab === 'enquiries' && (
           <AdminEnquiries />

@@ -13,9 +13,10 @@ import {
 import { BUSINESS_CONFIG, createWhatsAppInquiryLink } from '../data/businessConfig';
 import { CATEGORIES } from '../data/categoriesData';
 import { useStore } from '../context/StoreContext';
+import { Sparkles } from 'lucide-react';
 
-export default function Navbar({ selectedCategory, onSelectCategory, onSelectService }) {
-  const { services, settings, recordInquiry } = useStore();
+export default function Navbar({ selectedCategory, onSelectCategory, onSelectService, onOpenPartnerModal }) {
+  const { services, settings, activeRef, recordInquiry } = useStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -163,8 +164,19 @@ export default function Navbar({ selectedCategory, onSelectCategory, onSelectSer
               )}
             </div>
 
-            {/* Primary WhatsApp Action Button (Call button strictly excluded) */}
+            {/* Primary Action Buttons */}
             <div className="flex items-center gap-2 shrink-0">
+              {onOpenPartnerModal && (
+                <button
+                  onClick={onOpenPartnerModal}
+                  className="hidden md:flex items-center gap-1.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 px-3 py-1.5 sm:py-2 rounded-lg font-black text-xs shadow-md transition-all tap-bounce shrink-0"
+                  title="Work From Home पार्टनर बनें"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-slate-950" />
+                  <span>💼 पार्टनर बनें (20%-50%)</span>
+                </button>
+              )}
+
               <a
                 href={directWhatsAppUrl}
                 target="_blank"
@@ -397,7 +409,20 @@ export default function Navbar({ selectedCategory, onSelectCategory, onSelectSer
             </div>
           </div>
 
-          <div className="pt-2">
+          <div className="pt-2 space-y-2">
+            {onOpenPartnerModal && (
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  onOpenPartnerModal();
+                }}
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 py-2.5 rounded-lg font-black text-xs shadow tap-bounce"
+              >
+                <Sparkles className="w-4 h-4 text-slate-950" />
+                <span>💼 Work From Home पार्टनर बनें (20%-50% कमीशन)</span>
+              </button>
+            )}
+
             <a
               href={directWhatsAppUrl}
               target="_blank"
