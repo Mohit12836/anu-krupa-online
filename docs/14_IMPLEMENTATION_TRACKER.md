@@ -19,7 +19,7 @@
 | **P5** | Backend & Database (Supabase + Google Sheets Dual Engine) | `VERIFIED` | 4-मोड एडॉप्टर (Local/Sheet/Supabase/Dual), Auto-Column Google Apps Script, SQL DDL तैयार |
 | **P6** | WhatsApp Automation (WACA Cloud API) | `PLANNED` | आधिकारिक मेटा वेबहुक्स व फ्लो |
 | **P7** | Repeat Customer & Channel System | `PLANNED` | स्टेटस ट्रैकिंग व रिन्यूअल अलर्ट्स |
-| **P8** | Launch, Analytics & Production Deploy | `PLANNED` | अंतिम लाइव डिप्लॉयमेंट |
+| **P8** | Launch, Analytics & Production Deploy | `VERIFIED` | Vercel Live: https://anu-krupa-online.vercel.app/ |
 
 ---
 
