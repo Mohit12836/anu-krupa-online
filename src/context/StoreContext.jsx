@@ -127,13 +127,33 @@ export function StoreProvider({ children }) {
 
   // Actions for Owner
 
-  // Toggle active / hidden status of a service
+  // Toggle active / hidden status of a service (Hide / Unhide)
   const toggleServiceStatus = (serviceId) => {
     setServices((prev) =>
+      prev.map((s) => {
+        if (s.id !== serviceId) return s;
+        const isCurrentlyHidden = s.availability === 'paused' || s.availability === 'hidden' || s.isHidden === true;
+        return {
+          ...s,
+          availability: isCurrentlyHidden ? 'available' : 'hidden',
+          isHidden: !isCurrentlyHidden,
+        };
+      })
+    );
+  };
+
+  const hideService = (serviceId) => {
+    setServices((prev) =>
       prev.map((s) =>
-        s.id === serviceId
-          ? { ...s, availability: s.availability === 'paused' ? 'available' : 'paused' }
-          : s
+        s.id === serviceId ? { ...s, availability: 'hidden', isHidden: true } : s
+      )
+    );
+  };
+
+  const unhideService = (serviceId) => {
+    setServices((prev) =>
+      prev.map((s) =>
+        s.id === serviceId ? { ...s, availability: 'available', isHidden: false } : s
       )
     );
   };
@@ -238,6 +258,8 @@ export function StoreProvider({ children }) {
         dbAdapter,
         syncAllServicesToSheet,
         toggleServiceStatus,
+        hideService,
+        unhideService,
         toggleServicePopular,
         updateService,
         addService,

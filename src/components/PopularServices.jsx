@@ -6,8 +6,8 @@ import { createWhatsAppInquiryLink } from '../data/businessConfig';
 export default function PopularServices({ selectedCategory, onSelectCategory, onSelectService }) {
   const { services, settings, recordInquiry } = useStore();
 
-  // Filter only active services (exclude paused)
-  const activeServices = services.filter(s => s.availability !== 'paused');
+  // Filter only visible active services (exclude hidden and paused)
+  const activeServices = services.filter(s => !s.isHidden && s.availability !== 'hidden' && s.availability !== 'paused');
 
   // If a category is selected (and not 'all'), filter by that category.
   const displayedServices = selectedCategory === 'all'

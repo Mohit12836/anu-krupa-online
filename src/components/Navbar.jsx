@@ -28,7 +28,7 @@ export default function Navbar({ selectedCategory, onSelectCategory, onSelectSer
     if (searchQuery.trim().length > 0) {
       const q = searchQuery.toLowerCase();
       const filtered = services.filter(s => 
-        s.availability === 'available' && (
+        !s.isHidden && s.availability !== 'hidden' && s.availability !== 'paused' && (
           (s.nameHi && s.nameHi.toLowerCase().includes(q)) ||
           (s.nameEn && s.nameEn.toLowerCase().includes(q)) ||
           (s.name && s.name.toLowerCase().includes(q)) ||

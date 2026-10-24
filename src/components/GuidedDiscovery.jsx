@@ -22,8 +22,8 @@ export default function GuidedDiscovery({ onSelectService }) {
   // Available categories (excluding 'all')
   const availableCategories = CATEGORIES.filter(c => c.id !== 'all');
 
-  // Filtered available services for chosen category
-  const activeServices = services.filter(s => s.availability === 'available');
+  // Filtered available services for chosen category (exclude hidden)
+  const activeServices = services.filter(s => !s.isHidden && s.availability !== 'hidden' && s.availability !== 'paused');
   const categoryServices = selectedCatId 
     ? activeServices.filter(s => s.categoryId === selectedCatId) 
     : [];

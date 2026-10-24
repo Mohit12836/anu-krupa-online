@@ -22,8 +22,9 @@ export default function AdminDashboard({ onNavigateTab, onOpenAddService }) {
   const [announcementText, setAnnouncementText] = useState(settings.announcementBanner || '');
   const [isSavedNotice, setIsSavedNotice] = useState(false);
 
-  const activeServicesCount = services.filter(s => s.availability !== 'paused').length;
-  const hiddenServicesCount = services.filter(s => s.availability === 'paused').length;
+  const isServiceVisible = (s) => !s.isHidden && s.availability !== 'hidden' && s.availability !== 'paused';
+  const activeServicesCount = services.filter(isServiceVisible).length;
+  const hiddenServicesCount = services.length - activeServicesCount;
   const newInquiriesCount = inquiries.filter(inq => inq.status === 'NEW').length;
   const inProgressCount = inquiries.filter(inq => inq.status === 'IN_PROGRESS').length;
 
