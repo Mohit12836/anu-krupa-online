@@ -25,6 +25,7 @@ import {
   Award
 } from 'lucide-react';
 import { CATEGORIES, MACRO_VERTICALS } from '../data/categoriesData';
+import { useStore } from '../context/StoreContext';
 
 const iconMap = {
   Sprout,
@@ -57,7 +58,11 @@ export default function CategoryGrid({
   onSelectVertical,
   onOpenPartnerModal 
 }) {
+  const { settings } = useStore();
   const [internalVertical, setInternalVertical] = useState('all');
+
+  const disabledCategories = settings?.disabledCategories || [];
+  const disabledVerticals = settings?.disabledVerticals || [];
 
   const activeVertical = onSelectVertical ? selectedVertical : internalVertical;
   const setActiveVertical = (vertId) => {
@@ -70,13 +75,16 @@ export default function CategoryGrid({
     onSelectCategory('all');
   };
 
-  // 5 Core Macro Verticals excluding 'all' for quick tabs
-  const displayVerticals = MACRO_VERTICALS.filter(v => v.id !== 'all');
+  // Macro Verticals excluding 'all' and any disabled verticals
+  const displayVerticals = MACRO_VERTICALS
+    .filter(v => v.id !== 'all')
+    .filter(v => !disabledVerticals.includes(v.id));
 
-  // Subcategories to show based on selected vertical
-  const activeSubcategories = activeVertical === 'all'
+  // Subcategories to show based on selected vertical, excluding disabled ones
+  const activeSubcategories = (activeVertical === 'all'
     ? CATEGORIES.filter(c => c.id !== 'all')
-    : CATEGORIES.filter(c => c.verticalId === activeVertical);
+    : CATEGORIES.filter(c => c.verticalId === activeVertical)
+  ).filter(c => !disabledCategories.includes(c.id) && !disabledVerticals.includes(c.verticalId));
 
   return (
     <section className="py-4 md:py-6 bg-white border-y border-slate-200/80">

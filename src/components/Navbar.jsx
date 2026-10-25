@@ -8,7 +8,8 @@ import {
   ChevronDown, 
   ShieldCheck,
   CheckCircle2,
-  ExternalLink
+  ExternalLink,
+  AlertTriangle
 } from 'lucide-react';
 import { BUSINESS_CONFIG, createWhatsAppInquiryLink } from '../data/businessConfig';
 import { CATEGORIES } from '../data/categoriesData';
@@ -73,10 +74,18 @@ export default function Navbar({ selectedCategory, onSelectCategory, onSelectSer
   return (
     <header className="sticky top-0 z-40 w-full shadow-md">
       {/* 0. Live Announcement Notice Banner (Controlled by Owner Admin) */}
-      {settings.announcementBanner && (
+      {settings.showAnnouncementBanner !== false && settings.announcementBanner && (
         <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white text-[11px] sm:text-xs font-bold py-1.5 px-3 text-center shadow-inner flex items-center justify-center gap-2 border-b border-orange-500/30">
           <span className="animate-pulse">📢</span>
           <span className="truncate">{settings.announcementBanner}</span>
+        </div>
+      )}
+
+      {/* 0.1 Emergency Alert Banner (Controlled by Owner Admin) */}
+      {settings.showEmergencyBanner && settings.emergencyBannerText && (
+        <div className="bg-rose-600 text-white text-xs font-bold py-2 px-3 text-center shadow-md flex items-center justify-center gap-2 border-b border-rose-700 animate-in fade-in">
+          <AlertTriangle className="w-4 h-4 text-amber-300 animate-bounce shrink-0" />
+          <span className="truncate">{settings.emergencyBannerText}</span>
         </div>
       )}
 

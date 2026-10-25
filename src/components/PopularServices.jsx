@@ -25,8 +25,17 @@ export default function PopularServices({
   const { services, settings, activeRef, recordInquiry } = useStore();
   const [typeFilter, setTypeFilter] = useState('all'); // 'all' | 'service' | 'product'
 
-  // Filter only visible active services (exclude hidden and paused)
-  const activeServices = services.filter(s => !s.isHidden && s.availability !== 'hidden' && s.availability !== 'paused');
+  const disabledCategories = settings?.disabledCategories || [];
+  const disabledVerticals = settings?.disabledVerticals || [];
+
+  // Filter only visible active services (exclude hidden, paused, and disabled categories)
+  const activeServices = services.filter(s => 
+    !s.isHidden && 
+    s.availability !== 'hidden' && 
+    s.availability !== 'paused' &&
+    !disabledCategories.includes(s.categoryId) &&
+    !disabledVerticals.includes(s.verticalId)
+  );
 
   // Filter by vertical, category, and type
   const displayedServices = activeServices.filter((service) => {

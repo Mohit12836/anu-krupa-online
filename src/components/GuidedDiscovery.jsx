@@ -19,11 +19,22 @@ export default function GuidedDiscovery({ onSelectService }) {
   const [selectedServiceId, setSelectedServiceId] = useState(null);
   const [selectedOption, setSelectedOption] = useState(null);
 
-  // Available categories (excluding 'all')
-  const availableCategories = CATEGORIES.filter(c => c.id !== 'all');
+  const disabledCategories = settings?.disabledCategories || [];
+  const disabledVerticals = settings?.disabledVerticals || [];
 
-  // Filtered available services for chosen category (exclude hidden)
-  const activeServices = services.filter(s => !s.isHidden && s.availability !== 'hidden' && s.availability !== 'paused');
+  // Available categories (excluding 'all' and disabled ones)
+  const availableCategories = CATEGORIES.filter(
+    c => c.id !== 'all' && !disabledCategories.includes(c.id) && !disabledVerticals.includes(c.verticalId)
+  );
+
+  // Filtered available services for chosen category (exclude hidden and disabled categories)
+  const activeServices = services.filter(
+    s => !s.isHidden && 
+         s.availability !== 'hidden' && 
+         s.availability !== 'paused' &&
+         !disabledCategories.includes(s.categoryId) &&
+         !disabledVerticals.includes(s.verticalId)
+  );
   const categoryServices = selectedCatId 
     ? activeServices.filter(s => s.categoryId === selectedCatId) 
     : [];

@@ -130,19 +130,33 @@ export function StoreProvider({ children }) {
 
   // 2. Store Settings State
   const [settings, setSettings] = useState(() => {
+    const defaultSettings = {
+      ...BUSINESS_CONFIG,
+      isOpenToday: true,
+      shopClosedReason: 'आज दुकान का अवकाश है। आप WhatsApp पर अपना काम छोड़ सकते हैं, कल सुबह प्राथमिकता से किया जाएगा।',
+      showAnnouncementBanner: true,
+      announcementBanner: '🌾 किसान भाइयों के लिए समर्थन मूल्य ई-उपार्जन पंजीयन शुरू हो गया है।',
+      showPromoStrip: true,
+      showReferralBanner: true,
+      showEmergencyBanner: false,
+      emergencyBannerText: '',
+      disabledCategories: [],
+      disabledVerticals: [],
+    };
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-      return saved ? JSON.parse(saved) : {
-        ...BUSINESS_CONFIG,
-        isOpenToday: true,
-        announcementBanner: '🌾 किसान भाइयों के लिए समर्थन मूल्य ई-उपार्जन पंजीयन शुरू हो गया है।',
-      };
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          ...defaultSettings,
+          ...parsed,
+          disabledCategories: Array.isArray(parsed.disabledCategories) ? parsed.disabledCategories : [],
+          disabledVerticals: Array.isArray(parsed.disabledVerticals) ? parsed.disabledVerticals : [],
+        };
+      }
+      return defaultSettings;
     } catch {
-      return {
-        ...BUSINESS_CONFIG,
-        isOpenToday: true,
-        announcementBanner: '🌾 किसान भाइयों के लिए समर्थन मूल्य ई-उपार्जन पंजीयन शुरू हो गया है।',
-      };
+      return defaultSettings;
     }
   });
 
@@ -290,6 +304,74 @@ export function StoreProvider({ children }) {
       prev.map((s) =>
         s.id === serviceId ? { ...s, availability: 'available', isHidden: false } : s
       )
+    );
+  };
+
+  // Bulk hide selected services
+  const bulkHideServices = (serviceIds = []) => {
+    const idSet = new Set(serviceIds);
+    setServices((prev) =>
+      prev.map((s) => (idSet.has(s.id) ? { ...s, availability: 'hidden', isHidden: true } : s))
+    );
+  };
+
+  // Bulk unhide selected services
+  const bulkUnhideServices = (serviceIds = []) => {
+    const idSet = new Set(serviceIds);
+    setServices((prev) =>
+      prev.map((s) => (idSet.has(s.id) ? { ...s, availability: 'available', isHidden: false } : s))
+    );
+  };
+
+  // 1-Click Hide ALL services
+  const hideAllServices = () => {
+    setServices((prev) =>
+      prev.map((s) => ({ ...s, availability: 'hidden', isHidden: true }))
+    );
+  };
+
+  // 1-Click Unhide ALL services
+  const unhideAllServices = () => {
+    setServices((prev) =>
+      prev.map((s) => ({ ...s, availability: 'available', isHidden: false }))
+    );
+  };
+
+  // Toggle Category Status (Disable/Hide category from customer view)
+  const toggleCategoryDisabled = (categoryId) => {
+    setSettings((prev) => {
+      const current = prev.disabledCategories || [];
+      const isAlreadyDisabled = current.includes(categoryId);
+      const updated = isAlreadyDisabled
+        ? current.filter((id) => id !== categoryId)
+        : [...current, categoryId];
+      return { ...prev, disabledCategories: updated };
+    });
+  };
+
+  // Toggle Macro Vertical Status
+  const toggleVerticalDisabled = (verticalId) => {
+    setSettings((prev) => {
+      const current = prev.disabledVerticals || [];
+      const isAlreadyDisabled = current.includes(verticalId);
+      const updated = isAlreadyDisabled
+        ? current.filter((id) => id !== verticalId)
+        : [...current, verticalId];
+      return { ...prev, disabledVerticals: updated };
+    });
+  };
+
+  // Hide all services inside a specific category
+  const hideAllServicesInCategory = (categoryId) => {
+    setServices((prev) =>
+      prev.map((s) => (s.categoryId === categoryId ? { ...s, availability: 'hidden', isHidden: true } : s))
+    );
+  };
+
+  // Unhide all services inside a specific category
+  const unhideAllServicesInCategory = (categoryId) => {
+    setServices((prev) =>
+      prev.map((s) => (s.categoryId === categoryId ? { ...s, availability: 'available', isHidden: false } : s))
     );
   };
 
@@ -468,6 +550,14 @@ export function StoreProvider({ children }) {
         toggleServiceStatus,
         hideService,
         unhideService,
+        bulkHideServices,
+        bulkUnhideServices,
+        hideAllServices,
+        unhideAllServices,
+        toggleCategoryDisabled,
+        toggleVerticalDisabled,
+        hideAllServicesInCategory,
+        unhideAllServicesInCategory,
         toggleServicePopular,
         updateService,
         addService,

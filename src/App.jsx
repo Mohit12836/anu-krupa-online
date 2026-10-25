@@ -45,7 +45,7 @@ function CustomerView({ onSwitchToAdmin }) {
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 selection:bg-orange-500 selection:text-white pb-14 md:pb-0 relative">
       
       {/* 0. Active Referral Welcome Strip (When arriving with ?ref=AKP-XXXX) */}
-      {activeRef && (
+      {settings.showReferralBanner !== false && activeRef && (
         <div className="bg-gradient-to-r from-indigo-950 via-blue-900 to-indigo-950 text-white text-xs font-bold py-2 px-3 text-center shadow-md flex items-center justify-center gap-2 border-b border-indigo-400/30">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
           <span>
@@ -64,9 +64,9 @@ function CustomerView({ onSwitchToAdmin }) {
 
       {/* Optional Store Closed Notice */}
       {!settings.isOpenToday && (
-        <div className="bg-rose-50 border-b border-rose-200 py-2 px-4 text-center text-xs font-bold text-rose-800 flex items-center justify-center gap-2">
-          <Store className="w-4 h-4 text-rose-600" />
-          <span>आज दुकान का अवकाश है। आप WhatsApp पर अपना काम छोड़ सकते हैं, कल सुबह प्राथमिकता से किया जाएगा।</span>
+        <div className="bg-rose-50 border-b border-rose-200 py-2.5 px-4 text-center text-xs font-bold text-rose-800 flex items-center justify-center gap-2">
+          <Store className="w-4 h-4 text-rose-600 shrink-0" />
+          <span>{settings.shopClosedReason || 'आज दुकान का अवकाश है। आप WhatsApp पर अपना काम छोड़ सकते हैं, कल सुबह प्राथमिकता से किया जाएगा।'}</span>
         </div>
       )}
 
@@ -102,9 +102,11 @@ function CustomerView({ onSwitchToAdmin }) {
         />
 
         {/* 6. Highlight Promo Cards (Loans, Solar Pump Subsidy, Ayushman Card) */}
-        <PromoStrip 
-          onSelectCategory={handleSelectCategory}
-        />
+        {settings.showPromoStrip !== false && (
+          <PromoStrip 
+            onSelectCategory={handleSelectCategory}
+          />
+        )}
 
         {/* 7. Need Help with Something Else? (Custom Work Inquiry) */}
         <CustomWorkBox />
